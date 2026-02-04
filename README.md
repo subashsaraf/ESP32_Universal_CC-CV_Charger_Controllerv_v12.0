@@ -1,53 +1,162 @@
-//************************************************************************************
-// Project : ESP32 Universal CC/CV Charger Controller
-// Version : v12.0
-// Date    : 2024-03-22
-//
-// Changelog:
-//    
-//
-// Features:
-//    - Full hysteresis-based state machine: BULK → ABSORPTION → FLOAT → BACKUP → IDLE → BULK
-//    - Charge STATE logic (updateChargeMode) and PWM CONTROL logic (adjustPWM) separated
-//    - All hysteresis values from battery_types.h (no magic numbers)
-//    - Enforced minimum mode dwell time using existing timing infrastructure
-//    - Overvoltage forces BACKUP with hard PWM shutdown
-//    - IDLE exit requires both voltage + time hysteresis
-//    - Hysteresis and safety limits in battery_types.h
-//    - Battery-specific voltage/current hysteresis parameters
-//    - Battery-specific bulk/float safety limits
-//    - Convenience macros include new parameters
-//    - CC/CV charging algorithm for stable DC input
-//    - Simplified mode transitions for DC input charging
-//    - All safety, UI, and hardware features maintained
-//    - Web interface for CC/CV operation
-//    - Battery-specific charging profiles preserved
-//    - Universal DC Input (12-30V) via stable power supply
-//    - Battery sensing via ADS1115 + ACS712 (auto calibration)
-//    - Load control (AUTO / MANUAL) with protection
-//    - DS18B20 thermal fan control
-//    - 20x4 LCD + Web UI, WiFi + mDNS, audible alerts, 24h auto-reboot
-//
-// Hardware:
-//    - MCU    : DOIT ESP32 DEVKIT V1 (38-pin)
-//    - ADC    : ADS1115 @5V via bi-directional LLC (GAIN_TWOTHIRDS)
-//    - Driver : IR2104 Half-Bridge Driver (Synchronous Buck)
-//    - MOSFETs: High-Side N-CH + Low-Side N-CH
-//    - Buzzer : Active Buzzer for audible notifications
-//    - LLC    : I2C Bi-Directional Logic Level Converter (4-Channel)
-//    - Display: 20x4 I2C LCD Screen
-//
-// Hardware Notes:
-//    - INPUT/BAT sensed via shared divider
-//      (100k / (17.5k) => (15k + 5k POT)) ~= 6.71x
-//    - ACS712 requires zero-current calibration at startup
-//    - I2C fixed at 200kHz with GPIO-based bus recovery
-//    - PWM limited to user-defined % (70-85%) to ensure IR2104 bootstrap
-//      capacitor recharge
-//    - PWM resolution is 10-bit
-//    - IR2104 SD (Shutdown) pin on GPIO 33
-//      Logic: HIGH = Active, LOW = Shutdown (High-Z)
-//      Shutdown occurs ONLY in IDLE/BACKUP modes after 10s delay
-//    - LCD: 20x4 I2C display at address 0x27
-//
-//************************************************************************************
+# ESP32 Universal CC-CV Charger Controller v12.0
+
+![ESP32](https://img.shields.io/badge/ESP32-Compatible-green)
+![CC-CV](https://img.shields.io/badge/Charging-CC--CV-blue)
+![Status](https://img.shields.io/badge/Status-Stable-brightgreen)
+
+## 📖 Introduction
+The **ESP32 Universal CC-CV Charger Controller v12.0** is an advanced, modular, and safety-focused firmware that converts an **ESP32** into a **smart Constant-Current / Constant-Voltage (CC-CV) battery charger**.
+
+This project is ideal for **DIY battery chargers, solar charging systems, lab power supplies, and educational power-electronics projects**.
+
+---
+
+## ✨ Features
+
+### 🔋 Charging System
+- True **CC → CV charging algorithm**
+- Multi-stage charger state machine:
+  - Idle
+  - Bulk (Constant Current)
+  - Absorption (Constant Voltage)
+  - Float / Maintenance
+  - Re-charge / Backup
+- Hysteresis-based transitions (prevents PWM oscillation)
+- Fully configurable battery parameters
+
+### 🧠 Control & Safety
+- Separate **PWM control** and **charging logic**
+- ESP32 **LEDC PWM** based power control
+- Over-voltage protection
+- Over-current protection
+- Over-temperature shutdown
+
+### 📡 Interface & Monitoring
+- Built-in **Wi-Fi web interface**
+- Real-time monitoring:
+  - Battery voltage
+  - Charging current
+  - Charging stage
+  - Temperature
+- **mDNS support** for easy browser access
+- **20×4 I2C LCD** local display
+- **Buzzer alerts** for system events
+
+### 🌡 Thermal Management
+- **DS18B20 temperature sensor** support
+- Automatic **fan control**
+- Thermal cut-off protection
+
+---
+
+## 🧩 Supported Hardware
+
+### Controller
+- ESP32 DevKit V1 (38-pin recommended)
+
+### Sensors
+- ADS1115 – High-resolution voltage sensing
+- ACS712 – Current sensor with auto-zero calibration
+- DS18B20 – Temperature sensor
+
+### Power Stage
+- IR2104 – Half-bridge MOSFET driver
+- External high-side & low-side MOSFETs
+- PWM-controlled DC-DC converter stage
+
+### Interface
+- 20×4 I2C LCD
+- Active buzzer
+- Cooling fan
+
+---
+
+## 🔋 Battery Configuration
+All battery profiles are defined in:
+
+battery_types.h
+
+Configurable parameters:
+- Battery chemistry
+- Maximum charge voltage
+- Maximum charge current
+- Float voltage
+- Hysteresis thresholds
+- Safety cut-off limits
+
+⚠️ **Incorrect battery settings can cause damage or fire. Configure carefully.**
+
+---
+
+## 📁 Project Structure
+
+ESP32_Universal_CC-CV_Charger_Controllerv_v12.0/
+│
+├── ESP32_Universal_CC-CV_Charger_Controllerv_v12.0.ino
+├── battery_types.h
+├── charger_web.h / .cpp
+├── wifi_sys.h / .cpp
+├── fan_control.h / .cpp
+├── buzzer_sys.h / .cpp
+├── WiFiSignalHelpers.h / .cpp
+└── README.md
+
+---
+
+## 🛠 Installation
+
+1. Install **Arduino IDE**
+2. Install **ESP32 Board Support**
+3. Install required libraries:
+   - WiFi / WebServer
+   - OneWire & DallasTemperature
+   - LiquidCrystal_I2C
+   - Adafruit ADS1X15
+4. Open the `.ino` file
+5. Configure:
+   - Wi-Fi credentials
+   - Battery parameters
+   - Pin assignments
+6. Compile and upload to ESP32
+
+---
+
+## ⚠️ Safety Notice
+
+⚠️ This project involves **high voltage and high current** circuits.
+
+- Use proper isolation
+- Add fuses and protection circuits
+- Test with dummy loads first
+- Never leave the charger unattended
+
+**The author is not responsible for hardware damage or injury.**
+
+---
+
+## 🚀 Applications
+
+- DIY CC-CV battery charger
+- Solar charge controller
+- Bench power supply (CC-CV mode)
+- Battery maintenance system
+- Educational & research projects
+
+---
+
+## 📜 License
+
+This project is provided for **educational and personal use only**.  
+Commercial use requires prior permission from the author.
+
+---
+
+## 👤 Author
+
+**Subash Saraf**
+
+ESP32 Power Electronics Projects
+
+---
+
+⭐ If you find this project useful, please **star the repository** on GitHub!
