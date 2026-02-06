@@ -1,4 +1,4 @@
-# ESP32 Universal CC-CV Charger Controller v12.0
+# ESP32 Universal CC-CV Charger Controller v12.0(OLD)
 
 ![ESP32](https://img.shields.io/badge/ESP32-Compatible-green)
 ![CC-CV](https://img.shields.io/badge/Charging-CC--CV-blue)
